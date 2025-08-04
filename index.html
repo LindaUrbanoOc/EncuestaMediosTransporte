@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Huella de Carbono - Desplazamientos de Empleados</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-placeholder {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 15px;
+            border: 3px dashed rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Evita que la imagen se desborde */
+        }
+
+        .logo-placeholder img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* Mantiene las proporciones de la imagen */
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2E7D32, #4CAF50);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(76, 175, 80, 0.4);
+        }
+
+        .stat-card h3 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .stat-card p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-card h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2E7D32;
+            font-size: 1.5em;
+        }
+
+        .full-width-chart {
+            grid-column: 1 / -1;
+        }
+
+        .impact-section {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .impact-section h2 {
+            color: #2E7D32;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .impact-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .impact-card.low-impact {
+            border-left-color: #27ae60;
+        }
+
+        .impact-card.medium-impact {
+            border-left-color: #f39c12;
+        }
+
+        .impact-card.high-impact {
+            border-left-color: #e74c3c;
+        }
+
+        .transport-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .recommendations {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .recommendations h2 {
+            color: #2E7D32;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .rec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .rec-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #4CAF50;
+        }
+
+        .rec-card h4 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .stat-card h3 {
+                font-size: 2em;
+            }
+            
+            .logo-placeholder {
+                width: 250px;
+                height: 250px;
+                padding: 30px 15px;
+            }
+        }
+
+        .legend-custom {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-section">
+            <div class="logo-placeholder">
+                <img src="logo.png" alt="Logo One Contact - Grupo Migesa">
+            </div>
+        </div>
+        
+        <div class="header">
+            <h1>🌱 Análisis de Huella de Carbono</h1>
+            <p>Encuesta de Desplazamientos de Empleados - Resultados Ambientales</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>349</h3>
+                <p>Empleados Encuestados</p>
+            </div>
+            <div class="stat-card">
+                <h3>63</h3>
+                <p>Empleados Caminando<br>(0% emisiones)</p>
+            </div>
+            <div class="stat-card">
+                <h3>52.7%</h3>
+                <p>Usan Transporte Público</p>
+            </div>
+            <div class="stat-card">
+                <h3>29.2%</h3>
+                <p>Vehículos Motorizados Privados</p>
+            </div>
+        </div>
+
+        <div class="charts-container">
+            <div class="chart-card">
+                <h3>🚌 Distribución por Medio de Transporte</h3>
+                <canvas id="transportChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h3>📍 Desplazamientos por Distancia</h3>
+                <canvas id="distanceChart"></canvas>
+            </div>
+
+            <div class="chart-card full-width-chart">
+                <h3>🌍 Huella de Carbono por Distancia y Transporte</h3>
+                <canvas id="carbonFootprintChart"></canvas>
+            </div>
+        </div>
+
+        <div class="impact-section">
+            <h2>💨 Impacto Ambiental por Medio de Transporte</h2>
+            <div class="impact-grid">
+                <div class="impact-card low-impact">
+                    <div class="transport-icon">🚶‍♂️</div>
+                    <h4>Caminando</h4>
+                    <p><strong>63 empleados (18.1%)</strong></p>
+                    <p>0 kg CO₂ por km</p>
+                    <p>🌟 Impacto ambiental: NULO</p>
+                </div>
+
+                <div class="impact-card medium-impact">
+                    <div class="transport-icon">🚌</div>
+                    <h4>Bus / Transporte Público</h4>
+                    <p><strong>184 empleados (52.7%)</strong></p>
+                    <p>0.089 kg CO₂ por km</p>
+                    <p>🟡 Impacto ambiental: BAJO</p>
+                </div>
+
+                <div class="impact-card medium-impact">
+                    <div class="transport-icon">🏍️</div>
+                    <h4>Motocicleta</h4>
+                    <p><strong>96 empleados (27.5%)</strong></p>
+                    <p>0.113 kg CO₂ por km</p>
+                    <p>🟠 Impacto ambiental: MEDIO</p>
+                </div>
+
+                <div class="impact-card high-impact">
+                    <div class="transport-icon">🚗</div>
+                    <h4>Carro Particular</h4>
+                    <p><strong>6 empleados (1.7%)</strong></p>
+                    <p>0.192 kg CO₂ por km</p>
+                    <p>🔴 Impacto ambiental: ALTO</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendations">
+            <h2>🎯 Recomendaciones para Reducir la Huella de Carbono</h2>
+            <div class="rec-grid">
+                <div class="rec-card">
+                    <h4>🚌 Promover Transporte Público</h4>
+                    <p>Subsidios o convenios con sistemas de transporte masivo. El 52.7% ya lo usa, una excelente base para expandir.</p>
+                </div>
+
+                <div class="rec-card">
+                    <h4>🚴‍♂️ Incentivar Movilidad Activa</h4>
+                    <p>Programas de bicicletas empresariales, duchas en oficinas, y rutas seguras para ciclismo y caminata.</p>
+                </div>
+
+                <div class="rec-card">
+                    <h4>🏠 Trabajo Híbrido</h4>
+                    <p>Implementar modalidad híbrida para staff administrativo y personal no operativo, reduciendo desplazamientos 2-3 días por semana.</p>
+                </div>
+
+                <div class="rec-card">
+                    <h4>📊 Monitoreo Continuo</h4>
+                    <p>Encuestas periódicas para medir el impacto de las iniciativas implementadas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de la encuesta
+        const transportData = {
+            labels: ['Bus', 'Caminando', 'Motocicleta', 'Carro'],
+            data: [184, 63, 96, 6],
+            colors: ['#3498db', '#27ae60', '#f39c12', '#e74c3c']
+        };
+
+        const distanceData = {
+            labels: ['0-5 km', '5-10 km', '10-20 km', '20+ km'],
+            data: [106, 95, 82, 66],
+            colors: ['#2ecc71', '#f1c40f', '#e67e22', '#e74c3c']
+        };
+
+        // Gráfico de distribución por transporte
+        const ctx1 = document.getElementById('transportChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: transportData.labels,
+                datasets: [{
+                    data: transportData.data,
+                    backgroundColor: transportData.colors,
+                    borderWidth: 0,
+                    hoverOffset: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const percentage = ((context.raw / 349) * 100).toFixed(1);
+                                return context.label + ': ' + context.raw + ' empleados (' + percentage + '%)';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    duration: 2000
+                }
+            }
+        });
+
+        // Gráfico de distribución por distancia
+        const ctx2 = document.getElementById('distanceChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: distanceData.labels,
+                datasets: [{
+                    label: 'Empleados',
+                    data: distanceData.data,
+                    backgroundColor: distanceData.colors,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const percentage = ((context.raw / 349) * 100).toFixed(1);
+                                return context.raw + ' empleados (' + percentage + '%)';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutBounce'
+                }
+            }
+        });
+
+        // Gráfico de huella de carbono detallado
+        const ctx3 = document.getElementById('carbonFootprintChart').getContext('2d');
+        new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: ['0-5 km', '5-10 km', '10-20 km', '20+ km'],
+                datasets: [
+                    {
+                        label: 'Bus',
+                        data: [39, 71, 41, 33],
+                        backgroundColor: '#3498db',
+                        borderRadius: 4,
+                    },
+                    {
+                        label: 'Caminando',
+                        data: [63, 0, 0, 0],
+                        backgroundColor: '#27ae60',
+                        borderRadius: 4,
+                    },
+                    {
+                        label: 'Motocicleta',
+                        data: [4, 22, 39, 31],
+                        backgroundColor: '#f39c12',
+                        borderRadius: 4,
+                    },
+                    {
+                        label: 'Carro',
+                        data: [0, 2, 2, 2],
+                        backgroundColor: '#e74c3c',
+                        borderRadius: 4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            afterBody: function(tooltipItems) {
+                                let total = 0;
+                                tooltipItems.forEach(item => total += item.raw);
+                                return 'Total: ' + total + ' empleados';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2500,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+
+        // Animación de entrada para las tarjetas
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observar todas las tarjetas
+        document.querySelectorAll('.stat-card, .chart-card, .impact-card, .rec-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'all 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
